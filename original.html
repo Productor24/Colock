@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Digital Clock</title>
+    <link rel="icon" href="./leye prod logo.png">
+    <!-- Link to Roboto Mono font and Poppins font for button -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap"> <!-- Font for button -->
+    <style>
+        /* Global Styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden; /* Ensure no scrollbars */
+            background-size: cover;
+            background-position: center;
+            transition: background-image 0.5s ease-in-out;
+            background-attachment: fixed; /* Fixed background */
+            font-family: 'Roboto Mono', monospace; /* Default font */
+        }
+
+        .background-islamic,
+        .background-christian {
+            background-size: cover;
+            background-position: center;
+            height: 100vh;
+            width: 100vw;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+
+        .background-islamic.show {
+            opacity: 1;
+        }
+
+        .background-christian.show {
+            opacity: 1;
+        }
+
+        .clock-container {
+            position: relative;
+            text-align: center;
+            color: white;
+            z-index: 1; /* Ensure content is above background */
+            max-width: 90%;
+            max-height: 90%;
+            margin: auto;
+        }
+
+        .black-background {
+            position: relative;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 2% 5%;
+            border-radius: 10px;
+            backdrop-filter: blur(10px); /* Apply blur */
+            transition: all 0.5s ease-in-out;
+            display: inline-block;
+        }
+
+        .clock {
+            font-family: 'Roboto Mono', monospace; /* Apply Roboto Mono font */
+            font-size: calc(2rem + 2vw); /* Responsive font size */
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .date {
+            font-family: 'Roboto Mono', monospace; /* Apply Roboto Mono font */
+            font-size: calc(1rem + 1vw); /* Responsive font size */
+        }
+
+        .switch-button {
+            margin-top: 2rem;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            background-color: #333;
+            color: white;
+            border: none;
+            cursor: pointer;
+            outline: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            font-family: 'Poppins', sans-serif; /* Font for the button */
+        }
+
+        button:hover {
+            background-color: #22c00d;
+            transform: scale(1.1);
+        }
+
+        button:focus {
+            outline: none;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="clock-container">
+        <div class="black-background">
+            <div class="clock" id="clock"></div>
+            <div class="date" id="date"></div>
+            <div class="switch-button">
+                <button id="toggleButton">Switch Clock</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="background-islamic" id="background-islamic" style="background-image: url('islamic_background.jpg21.jpg');"></div>
+    <div class="background-christian" id="background-christian" style="background-image: url('christian_background.jpg.jpeg2.jpg');"></div>
+
+    <!-- Link to Luxon library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/2.3.0/luxon.min.js"></script>
+    <script>
+        const clockElement = document.getElementById('clock');
+        const dateElement = document.getElementById('date');
+        const toggleButton = document.getElementById('toggleButton');
+        const islamicBackground = document.getElementById('background-islamic');
+        const christianBackground = document.getElementById('background-christian');
+
+        let isIslamic = true; // Start with Islamic background
+
+        const arabicDays = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+
+        function arabicNumerals(str) {
+            return str.replace(/[0-9]/g, (d) => '٠١٢٣٤٥٦٧٨٩'[d]);
+        }
+
+        function updateTime() {
+            const now = new Date();
+
+            // Islamic Calendar (Hijri)
+            const islamicDate = luxon.DateTime.fromJSDate(now, { zone: 'utc' })
+                .setLocale('ar-SA-u-ca-islamic')
+                .toLocaleString(luxon.DateTime.DATE_FULL);
+
+            // Christian Calendar (Gregorian)
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const christianDate = now.toLocaleDateString('fr-FR', options);
+
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const timeString = `${hours}:${minutes}:${seconds}`;
+
+            const dayIndex = now.getDay(); // Get the day index (0-6)
+            const arabicDay = arabicDays[dayIndex]; // Get the Arabic day name
+
+            if (isIslamic) {
+                clockElement.textContent = arabicNumerals(timeString);
+                dateElement.textContent = `${arabicDay} - ${islamicDate}`;
+                islamicBackground.classList.add('show');
+                christianBackground.classList.remove('show');
+            } else {
+                clockElement.textContent = timeString;
+                dateElement.textContent = christianDate;
+                islamicBackground.classList.remove('show');
+                christianBackground.classList.add('show');
+            }
+        }
+
+        toggleButton.addEventListener('click', function() {
+            isIslamic = !isIslamic;
+            updateTime();
+        });
+
+        setInterval(updateTime, 1000); // Update every second
+        updateTime(); // Initialize immediately
+    </script>
+</body>
+</html>
